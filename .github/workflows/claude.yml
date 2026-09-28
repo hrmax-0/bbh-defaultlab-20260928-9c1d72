@@ -1,0 +1,37 @@
+name: Claude Default Push Validation
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  claude:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.user.login == 'furkansoyturk' &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
+    env:
+      ANTHROPIC_CUSTOM_HEADERS: "X-HackerOne-Handle: hrmax"
+      ANTHROPIC_LOG: "debug"
+      CLAUDE_DEBUG: "true"
+    steps:
+      - name: Checkout base repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run pinned Claude Code Action
+        uses: anthropics/claude-code-action@756cc22e19660d20e8cc9496b4f242475a7f7790
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          show_full_output: true
+          display_report: false
+          claude_args: "--max-turns 10"
